@@ -99,23 +99,78 @@ function cwtheme_widgets_init() {
 add_action( 'widgets_init', 'cwtheme_widgets_init' );
 
 /**
+ * Define Theme Constants
+ */
+$theme = wp_get_theme();
+$theme_title = $theme->name;
+$theme_version = $theme->version;
+$author_url = 'https://chriswharton.me';
+
+define('CWTHEME_THEME_SLUG', get_template());
+define('CWTHEME_THEME_NAME', $theme_title);
+define('CWTHEME_THEME_VER', $theme_version);
+define('CWTHEME_URL', $author_url);
+
+/**
  * Enqueue scripts and styles.
  */
-function cwtheme_scripts() {
+function cwtheme_styles_and_scripts() {
 
-	wp_enqueue_style('cwtheme-style', get_bloginfo('stylesheet_url'), array(), '1.0.0', 'screen');
-  wp_enqueue_style('cwtheme-print', get_template_directory_uri() . '/print.css', array(), '1.0.0', 'print');
-
+	wp_enqueue_style('cwtheme-style', get_bloginfo('stylesheet_url'), array(), CWTHEME_THEME_VER, 'screen');
+  wp_enqueue_style('cwtheme-print', get_template_directory_uri() . '/print.css', array(), CWTHEME_THEME_VER, 'print');
 
 	wp_enqueue_script( 'cwtheme-navigation', get_template_directory_uri() . '/js/navigation.js', array(), '20151215', true );
-
 	wp_enqueue_script( 'cwtheme-skip-link-focus-fix', get_template_directory_uri() . '/js/skip-link-focus-fix.js', array(), '20151215', true );
 
 	if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
 		wp_enqueue_script( 'comment-reply' );
 	}
 }
-add_action( 'wp_enqueue_scripts', 'cwtheme_scripts' );
+add_action( 'wp_enqueue_scripts', 'cwtheme_styles_and_scripts' );
+
+
+/**
+ * Enqueue styles for IE
+ */
+add_action('wp_enqueue_scripts', 'cwtheme_load_ie_css');
+function cwtheme_load_ie_css()
+{
+    wp_enqueue_style( 'cwtheme-ie9', get_template_directory_uri() . '/ie.css', array(), CWTHEME_THEME_VER, 'screen' );
+    wp_style_add_data( 'cwtheme-ie9', 'conditional', '(lt IE 9) & (!IEMobile)' );
+}
+
+/**
+ * Enqueue scripts for HTML5 shim - less than IE9 browsers
+ */
+add_action('wp_enqueue_scripts', 'cwtheme_load_html5_shim',95);
+function cwtheme_load_html5_shim()
+{
+    wp_enqueue_script('cwtheme-html5', get_template_directory_uri() . '/js/html5.js', CWTHEME_THEME_VER, true);
+    wp_script_add_data( 'cwtheme-html5', 'conditional', 'lt IE 9' );
+}
+
+
+/**
+ * Change Excerpt end
+ */
+function cwtheme_excerpt_more($more)
+{
+    return '...';
+}
+add_filter('excerpt_more', 'cwtheme_excerpt_more');
+
+
+/**
+ * Update Excerpt length
+ */
+function cwtheme_custom_excerpt_length($length)
+{
+    $excerpt_length = 20;
+    return $excerpt_length;
+}
+add_filter('excerpt_length', 'cwtheme_custom_excerpt_length', 999);
+
+
 
 /**
  * Implement the Custom Header feature.
